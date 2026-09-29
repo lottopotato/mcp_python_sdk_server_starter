@@ -1,0 +1,20 @@
+[project]
+name = "python-mcp-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "김현호", email = "kimhh@anyfive.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "mcp[cli]>=2.2.0",
+    "rich>=15.0.0",
+]
+
+[project.scripts]
+python-mcp-server = "python_mcp_server:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
