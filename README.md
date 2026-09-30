@@ -89,3 +89,56 @@ src/
 - Project metadata and dependencies are managed in `pyproject.toml`.
 - The `.env` file is loaded automatically.
 - The default server address and port are intended for development. Review the bind address, allowed hosts, and CORS policy before exposing the server externally.
+
+## Note: Cloning Without Git History
+
+By default, `git clone` is designed to include the repository's full history and configuration (the `.git` folder). If you want to grab just the code from this starter pack without history to start a new project, you can use one of the methods below.
+
+### 1. Use `git clone --depth 1` (recommended)
+
+This fetches only the latest commit snapshot. Since no history is downloaded, it's very fast, but a `.git` folder is still created. So you need to **delete the `.git` folder after running the command** to end up with just the code.
+
+```bash
+# 1. Clone only the latest commit
+git clone --depth 1 <repository URL>
+
+# 2. Move into the folder
+cd <folder-name>
+
+# 3. Remove the git folder (Linux/Mac)
+rm -rf .git
+
+# 3. Remove the git folder (Windows PowerShell)
+rm -Recurse -Force .git
+```
+
+### 2. Use `npx degit` (cleanest method)
+
+If you have Node.js installed, using the `degit` tool is the most convenient option. It copies only the code and never creates a `.git` folder at all.
+
+```bash
+npx degit <username>/<repository-name> <new-folder-name>
+```
+
+### 3. Use `git archive` (requires server support)
+
+This requires support from the remote server and downloads the code as an archive without `.git`. (Note that some services, such as GitHub, restrict remote `git archive` for security reasons.)
+
+```bash
+git archive --remote=<repository URL> HEAD -o latest.zip
+```
+
+### 4. Download a ZIP with curl or wget
+
+Instead of a Git command, this uses the ZIP download link provided by the web service. (GitHub example below.)
+
+```bash
+curl -L https://github.com/<user>/<repo>/archive/refs/heads/main.zip -o code.zip
+unzip code.zip
+```
+
+### Summary
+
+- **Fastest Git command:** run `git clone --depth 1`, then delete the `.git` folder
+- **Cleanest tool:** use `npx degit`
+- **GUI users:** click **[Code] -> [Download ZIP]** on the GitHub page
