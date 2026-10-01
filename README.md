@@ -25,30 +25,64 @@ uv sync
 
 ## Running the Server
 
-The `python-mcp-server` command does not currently start the server. The server application is configured in `src/main.py`, but it is not connected to the package CLI entry point. Connect an appropriate entry point before deciding how to launch the server.
-
-## Configuration
-
-Copy `.env_example` to `.env` in the repository root, then update the values as needed. `.env` is excluded from Git because it may contain sensitive information, while `.env_example` is committed as a shareable configuration template. If a setting is omitted, its default value from the table below is used.
+The server can be started in one of three ways. From the repository root, configure the environment first:
 
 ```bash
 cp .env_example .env
 ```
 
+### 1. Built-in Uvicorn server
+
+Use the project runner for local development. It calls `SERVER.run()` and reads `server_host` and `server_port` from `.env`.
+
+```bash
+uv run --env-file .env python -m src.mcp_run
+```
+
+### 2. Uvicorn CLI
+
+The ASGI app is exposed as `app` by `src.mcp_run_via_gunicorn`. Set the bind address and port with Uvicorn options; keep them consistent with the server settings in `.env`.
+
+```bash
+uv run --env-file .env uvicorn src.mcp_run_via_gunicorn:app \
+  --host 127.0.0.1 \
+  --port 8096
+```
+
+### 3. Gunicorn with Uvicorn workers
+
+Install the optional Gunicorn dependency and start the server using the repository configuration:
+
+```bash
+uv sync --extra gunicorn
+uv run gunicorn -c gunicorn.conf.py
+```
+
+Gunicorn reads `gunicorn_bind`, `gunicorn_workers`, and `gunicorn_timeout` from `.env`. `gunicorn_bind` controls Gunicorn's listener; make sure its host is compatible with `server_host` and the allowed-host configuration.
+
+All three methods expose the MCP endpoint at `/mcp` and the REST route at `/api/v1/do_something`.
+
+## Configuration
+
+Copy `.env_example` to `.env` as described in [Running the Server](#running-the-server), then update the values as needed. `.env` is excluded from Git because it may contain sensitive information, while `.env_example` is committed as a shareable configuration template. If a setting is omitted, its default value from the table below is used.
+
 | Environment variable | Default | Description |
 |---|---|---|
-| `server_host` | `127.0.0.1` | Address the server binds to |
-| `server_port` | `8096` | Server port |
+| `server_host` | `127.0.0.1` | Host used by the built-in runner and MCP transport configuration |
+| `server_port` | `8096` | Port used by the built-in runner |
 | `server_stateless_http` | `false` | Whether to use stateless mode for HTTP transport |
 | `log_level` | `INFO` | Logging level |
 | `enable_dns_rebinding_protection` | `false` | Enable DNS rebinding protection |
 | `allowed_hosts` | `127.0.0.1:*,localhost:*,[::1]:*` | Comma-separated list of allowed hosts for DNS rebinding protection |
 | `allowed_origins` | `http://127.0.0.1:*,http://localhost:*,http://[::1]:*` | Comma-separated list of allowed origins for DNS rebinding protection |
 | `allow_test_kwargs` | `false` | Allow test-only retrieval arguments |
+| `gunicorn_bind` | `127.0.0.1:8000` | Gunicorn bind address and port (Gunicorn runner only) |
+| `gunicorn_workers` | `1` | Number of Gunicorn worker processes |
+| `gunicorn_timeout` | `600` | Gunicorn worker timeout in seconds |
 
 `allowed_hosts` and `allowed_origins` are passed to the DNS rebinding protection settings. The current CORS middleware allows all origins, methods, and headers for development convenience. Restrict these settings before deploying to production.
 
-## Available Interfaces
+## Note: Available Interfaces Form
 
 ### MCP Tool
 
@@ -80,9 +114,13 @@ src/
 ├── modules/        # Shared modules and logging
 ├── tasks/          # MCP tools and resources, and REST API
 ├── utils/          # Utilities
-├── main.py         # Server and interface configuration
+├── mcp.py          # Server and interface configuration; exports SERVER
+├── mcp_run.py      # Built-in server runner
+├── mcp_run_via_gunicorn.py  # ASGI app setup for Uvicorn/Gunicorn
 └── server.py       # Streamable HTTP server wrapper
 ```
+
+The repository root also contains `gunicorn.conf.py`, which configures the optional Gunicorn runner.
 
 ## Development Notes
 
@@ -92,11 +130,11 @@ src/
 
 ## Note: Cloning Without Git History
 
-By default, `git clone` is designed to include the repository's full history and configuration (the `.git` folder). If you want to grab just the code from this starter pack without history to start a new project, you can use one of the methods below.
+By default, `git clone` downloads the repository history and creates a `.git` folder. If you want to start a new project with the starter pack's files but without its Git history, use one of the methods below.
 
 ### 1. Use `git clone --depth 1` (recommended)
 
-This fetches only the latest commit snapshot. Since no history is downloaded, it's very fast, but a `.git` folder is still created. So you need to **delete the `.git` folder after running the command** to end up with just the code.
+This fetches only the latest commit and its required Git data, rather than the full history. It still creates a `.git` folder, so **delete the `.git` folder after cloning** to keep only the files.
 
 ```bash
 # 1. Clone only the latest commit
@@ -105,10 +143,10 @@ git clone --depth 1 <repository URL>
 # 2. Move into the folder
 cd <folder-name>
 
-# 3. Remove the git folder (Linux/Mac)
+# 3. Remove the git folder (Linux/macOS)
 rm -rf .git
 
-# 3. Remove the git folder (Windows PowerShell)
+# Remove the git folder (Windows PowerShell)
 rm -Recurse -Force .git
 ```
 

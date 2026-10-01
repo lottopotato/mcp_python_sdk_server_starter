@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # The address and port to bind to
-# bind = "0.0.0.0:8096"
+# bind = "0.0.0.0:8000"
 bind = os.getenv("gunicorn_bind", "127.0.0.1:8000")
 
 # The number of worker processes
@@ -22,7 +22,7 @@ worker_class = "uvicorn.workers.UvicornWorker"
 accesslog = "-"
 errorlog = "-"
 
-wsgi_app = 'src.mcp:app'
+wsgi_app = 'src.mcp_run_via_gunicorn:app'
 
 # The user and group to run as (security best practice)
 # user = "your_user"
