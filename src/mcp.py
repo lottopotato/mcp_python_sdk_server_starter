@@ -182,4 +182,4 @@ async def do_something(
 async def do_something_restful(request: Request) -> Response:
     return await restful_api.do_something_independently(request=request)
 
-__all__ = ['SERVER', 'CHATBOT']
+__all__ = ['SERVER']
